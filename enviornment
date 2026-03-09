@@ -1,0 +1,46 @@
+let weather="sunny";
+let temperature=20;
+let dayTime=12;
+
+function updateEnvironment(){
+    dayTime += 0.01;
+    if(dayTime>24) dayTime=0;
+
+    switch(season){
+        case "spring": temperature = 15 + 10*Math.sin(dayTime/24*2*Math.PI); break;
+        case "summer": temperature = 25 + 5*Math.sin(dayTime/24*2*Math.PI); break;
+        case "fall": temperature = 10 + 10*Math.sin(dayTime/24*2*Math.PI); break;
+        case "winter": temperature = -5 + 5*Math.sin(dayTime/24*2*Math.PI); break;
+    }
+
+    if(Math.random()<0.05){
+        let options=["sunny","rain","snow"];
+        weather=options[Math.floor(Math.random()*options.length)];
+    }
+
+    if(temperature>30) player.thirst+=0.05;
+    if(temperature<0) player.hunger+=0.05;
+}
+
+function drawEnvironment(ctx){
+    let brightness=1;
+    if(dayTime<6||dayTime>18) brightness=0.3;
+    else if(dayTime>=6&&dayTime<8) brightness=0.6;
+    else if(dayTime>=16&&dayTime<=18) brightness=0.6;
+    ctx.fillStyle=`rgba(74,123,79,${brightness})`;
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    if(weather==="rain"){ ctx.fillStyle="rgba(100,100,255,0.2)"; ctx.fillRect(0,0,canvas.width,canvas.height); }
+    else if(weather==="snow"){ ctx.fillStyle="rgba(255,255,255,0.2)"; ctx.fillRect(0,0,canvas.width,canvas.height); }
+}
+
+function updateUI(){
+    document.getElementById("ui").innerHTML=
+        `Health: ${player.health.toFixed(1)}<br>
+         Hunger: ${player.hunger.toFixed(1)}<br>
+         Thirst: ${player.thirst.toFixed(1)}<br>
+         Temp: ${temperature.toFixed(1)}°C<br>
+         Weather: ${weather}<br>
+         Time: ${Math.floor(dayTime)}:00<br>
+         Inventory: ${player.inventory.join(", ")}`;
+}
