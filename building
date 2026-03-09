@@ -1,0 +1,22 @@
+let placedBuildings=[];
+
+function updateBuildings(){
+    // placeholder for future interactive placement
+}
+
+function drawBuildings(ctx){
+    placedBuildings.forEach(b=>{
+        ctx.fillStyle="#a52a2a";
+        ctx.fillRect(b.x,b.y,TILE,TILE);
+    });
+}
+
+// Example function to place a building
+function placeBuilding(x,y,type){
+    let needed="wood";
+    if(player.inventory.includes(needed)){
+        let index = player.inventory.indexOf(needed);
+        if(index>=0) player.inventory.splice(index,1);
+        placedBuildings.push({x:x, y:y, type:type});
+    } else alert("Not enough wood to build "+type);
+}
