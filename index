@@ -1,0 +1,34 @@
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>8-Bit Forest Survival</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="menu">
+    <button class="btn" onclick="openPlay()">Play</button>
+    <button class="btn" onclick="alert('Tutorial Coming Soon')">Tutorial</button>
+    <button class="btn" onclick="alert('Settings Coming Soon')">Settings</button>
+</div>
+
+<div id="worldSelect">
+    <h1>Create New World</h1>
+    <button class="btn" onclick="startGame('easy')">Easy</button>
+    <button class="btn" onclick="startGame('normal')">Normal</button>
+    <button class="btn" onclick="startGame('hard')">Hard</button>
+</div>
+
+<canvas id="game" width="800" height="600"></canvas>
+<div id="ui"></div>
+<div id="inventoryUI"></div>
+
+<!-- Scripts -->
+<script src="player.js"></script>
+<script src="world.js"></script>
+<script src="enemies.js"></script>
+<script src="crafting.js"></script>
+<script src="environment.js"></script>
+<script src="building.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
