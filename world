@@ -1,0 +1,49 @@
+// World objects
+let trees=[], bushes=[], buildings=[];
+
+// Seasons
+let season = "summer";
+
+function getTreeColor(){
+    if(season==="spring"||season==="summer") return "green";
+    if(season==="fall"){
+        const colors = ["orange","red","yellow","brown"];
+        return colors[Math.floor(Math.random()*colors.length)];
+    }
+    if(season==="winter") return "white";
+    return "green";
+}
+
+function genWorld(){
+    trees=[]; bushes=[]; buildings=[];
+    // Trees
+    for(let i=0;i<80;i++){
+        trees.push({x:Math.random()*(canvas.width-TILE), y:Math.random()*(canvas.height-TILE), color:getTreeColor()});
+    }
+    // Bushes
+    for(let i=0;i<30;i++){
+        bushes.push({x:Math.random()*(canvas.width-TILE), y:Math.random()*(canvas.height-TILE),
+            berry:["red","purple","blue"][Math.floor(Math.random()*3)]});
+    }
+    // Buildings
+    for(let i=0;i<3;i++){
+        if(Math.random()<0.3) buildings.push({x:Math.random()*(canvas.width-TILE*2), y:Math.random()*(canvas.height-TILE*2)});
+    }
+}
+
+function drawWorld(ctx){
+    trees.forEach(t=>{
+        ctx.fillStyle=t.color;
+        ctx.fillRect(t.x,t.y,TILE,TILE);
+    });
+    bushes.forEach(b=>{
+        ctx.fillStyle="green";
+        ctx.fillRect(b.x,b.y,TILE,TILE);
+        ctx.fillStyle=b.berry;
+        ctx.fillRect(b.x+10,b.y+10,12,12);
+    });
+    buildings.forEach(b=>{
+        ctx.fillStyle="#555";
+        ctx.fillRect(b.x,b.y,64,64);
+    });
+}
