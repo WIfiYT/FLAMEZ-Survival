@@ -1,0 +1,52 @@
+const recipes = [
+    {name:"Campfire", ingredients:{"wood":3}, result:"campfire"},
+    {name:"Cooked Meat", ingredients:{"raw_meat":1}, result:"cooked_meat"},
+    {name:"Berry Pie", ingredients:{"red_berry":2}, result:"berry_pie"}
+];
+
+const craftDiv = document.createElement("div");
+craftDiv.style.position="absolute";
+craftDiv.style.top="50%";
+craftDiv.style.left="50%";
+craftDiv.style.transform="translate(-50%,-50%)";
+craftDiv.style.background="rgba(0,0,0,0.85)";
+craftDiv.style.color="white";
+craftDiv.style.padding="20px";
+craftDiv.style.display="none";
+craftDiv.style.border="2px solid white";
+document.body.appendChild(craftDiv);
+
+document.addEventListener('keydown', e=>{
+    if(e.key==="q") toggleCraftingMenu();
+});
+
+function toggleCraftingMenu(){
+    craftDiv.style.display = craftDiv.style.display==="none"?"block":"none";
+    updateCraftingMenu();
+}
+
+function updateCraftingMenu(){
+    craftDiv.innerHTML="<h3>Crafting</h3>";
+    recipes.forEach(r=>{
+        const btn=document.createElement("button");
+        btn.innerText=r.name; btn.style.margin="5px"; btn.style.fontSize="16px";
+        btn.onclick = ()=>craftItem(r);
+        craftDiv.appendChild(btn);
+    });
+}
+
+function craftItem(recipe){
+    for(const ing in recipe.ingredients){
+        let count=player.inventory.filter(x=>x===ing).length;
+        if(count<recipe.ingredients[ing]){ alert("Not enough "+ing); return; }
+    }
+    for(const ing in recipe.ingredients){
+        for(let i=0;i<recipe.ingredients[ing];i++){
+            let index = player.inventory.indexOf(ing);
+            if(index>=0) player.inventory.splice(index,1);
+        }
+    }
+    player.inventory.push(recipe.result);
+    alert(recipe.result+" crafted!");
+    updateInventoryUI();
+}
