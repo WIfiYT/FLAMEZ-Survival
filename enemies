@@ -1,0 +1,70 @@
+let enemies=[], projectiles=[];
+
+function genEnemies(){
+    // Wolves
+    for(let i=0;i<5;i++) enemies.push({x:rand(100,700), y:rand(100,500), type:"wolf", hp:30, speed:2, angry:false});
+    // Zombies
+    for(let i=0;i<3;i++) enemies.push({x:rand(100,700), y:rand(100,500), type:"zombie", hp:50, speed:1, angry:false});
+    // Bandits
+    for(let i=0;i<2;i++) enemies.push({x:rand(100,700), y:rand(100,500), type:"bandit", hp:40, speed:1.5, angry:false, cooldown:0});
+}
+
+function updateEnemies(){
+    enemies.forEach(e=>{
+        let dx=player.x-e.x, dy=player.y-e.y;
+        let distToPlayer = Math.hypot(dx,dy);
+        if(distToPlayer<100||e.angry) e.angry=true;
+        if(e.angry){
+            let mag=Math.hypot(dx,dy);
+            dx/=mag; dy/=mag;
+            e.x += dx*e.speed;
+            e.y += dy*e.speed;
+        }
+        // Attack
+        if(distToPlayer<32){
+            let dmg=0;
+            if(e.type==="wolf") dmg=5*damageRate/7.5;
+            if(e.type==="zombie") dmg=3*damageRate/7.5;
+            if(e.type==="bandit") dmg=2*damageRate/7.5;
+            player.health -= dmg*0.1;
+        }
+        // Bandit projectile
+        if(e.type==="bandit" && e.cooldown<=0 && distToPlayer<300){
+            e.cooldown=100;
+            shootProjectile(e.x,e.y,player.x,player.y);
+        }
+        if(e.cooldown>0) e.cooldown--;
+    });
+}
+
+function shootProjectile(x,y,targetX,targetY){
+    let dx=targetX-x, dy=targetY-y;
+    let mag=Math.hypot(dx,dy); dx/=mag; dy/=mag;
+    projectiles.push({x:x,y:y,dx:dx*4,dy:dy*4});
+}
+
+function updateProjectiles(){
+    for(let i=projectiles.length-1;i>=0;i--){
+        let p=projectiles[i];
+        p.x+=p.dx; p.y+=p.dy;
+        if(dist(p.x,p.y,player.x,player.y)<16){ player.health-=5; projectiles.splice(i,1); continue; }
+        if(p.x<0||p.x>canvas.width||p.y<0||p.y>canvas.height) projectiles.splice(i,1);
+    }
+}
+
+function drawEnemies(ctx){
+    enemies.forEach(e=>{
+        if(e.type==="wolf") ctx.fillStyle="gray";
+        else if(e.type==="zombie") ctx.fillStyle="green";
+        else if(e.type==="bandit") ctx.fillStyle="purple";
+        ctx.fillRect(e.x,e.y,TILE,TILE);
+    });
+    projectiles.forEach(p=>{
+        ctx.fillStyle="yellow";
+        ctx.fillRect(p.x,p.y,8,8);
+    });
+}
+
+// Utility
+function rand(min,max){ return Math.random()*(max-min)+min; }
+function dist(x1,y1,x2,y2){ return Math.hypot(x1-x2,y1-y2); }
