@@ -1,0 +1,106 @@
+let player = {
+    x:400,
+    y:300,
+    health:100,
+    hunger:100,
+    thirst:100,
+    inventory:[],
+    hasAxe:true,
+    hasPickaxe:true
+};
+
+let hungerRate = 0.02;
+let thirstRate = 0.03;
+let damageRate = 7.5;
+
+// Initialize Inventory UI
+function initInventoryUI() {
+    const invUI = document.getElementById("inventoryUI");
+    invUI.innerHTML="";
+    for(let i=0;i<10;i++){
+        let slot = document.createElement("div");
+        slot.className="invSlot";
+        invUI.appendChild(slot);
+    }
+}
+
+function updatePlayer(){
+    let speed = 2;
+    if(keys["Shift"]) speed=3; // sprint
+
+    tryMove(player.x, player.y - (keys["w"]?speed:0));
+    tryMove(player.x, player.y + (keys["s"]?speed:0));
+    tryMove(player.x - (keys["a"]?speed:0), player.y);
+    tryMove(player.x + (keys["d"]?speed:0), player.y);
+
+    // Hunger & Thirst drain
+    player.hunger -= hungerRate;
+    player.thirst -= thirstRate;
+    if(player.hunger<=0 || player.thirst<=0) player.health -= 0.05;
+
+    // Drinking water
+    if(player.x < 50 && keys["e"]){
+        player.thirst = 100;
+        if(Math.random()<0.05) player.health -= 20;
+    }
+
+    // Interact with bushes
+    bushes.forEach(b => {
+        if(dist(player.x,player.y,b.x,b.y)<32 && keys["e"]){
+            player.hunger = Math.min(100, player.hunger+10);
+            player.inventory.push(b.berry+"_berry");
+            b.x=-999; b.y=-999;
+        }
+    });
+
+    // Chopping trees
+    trees.forEach(t=>{
+        if(dist(player.x,player.y,t.x,t.y)<32 && keys["e"] && player.hasAxe){
+            if(Math.random()<0.5) player.inventory.push("wood");
+            t.x=-999; t.y=-999;
+        }
+    });
+
+    // Cooking at fire
+    if(dist(player.x,player.y,400,300)<50 && keys["c"]){
+        for(let i=0;i<player.inventory.length;i++){
+            if(player.inventory[i]==="raw_meat") player.inventory[i]="cooked_meat";
+        }
+    }
+}
+
+function tryMove(newX,newY){
+    if(newX<0 || newX>canvas.width-TILE || newY<0 || newY>canvas.height-TILE) return;
+    player.x = newX;
+    player.y = newY;
+}
+
+function updateInventoryUI(){
+    const invUI = document.getElementById("inventoryUI");
+    let slots = invUI.children;
+    for(let i=0;i<slots.length;i++){
+        slots[i].style.backgroundImage="";
+        slots[i].title="";
+        if(player.inventory[i]){
+            slots[i].style.backgroundColor="#a52a2a";
+            slots[i].title = player.inventory[i];
+        } else {
+            slots[i].style.backgroundColor="#222";
+        }
+    }
+}
+
+function drawPlayer(ctx){
+    ctx.fillStyle="white";
+    ctx.fillRect(player.x,player.y,TILE,TILE);
+}
+
+// Utility distance function
+function dist(x1,y1,x2,y2){ return Math.hypot(x1-x2,y1-y2); }
+
+// Set difficulty (from menu)
+function setDifficulty(mode){
+    if(mode==="easy"){ hungerRate=0.01; thirstRate=0.015; damageRate=5; }
+    if(mode==="normal"){ hungerRate=0.02; thirstRate=0.03; damageRate=7.5; }
+    if(mode==="hard"){ hungerRate=0.03; thirstRate=0.04; damageRate=10; }
+}
