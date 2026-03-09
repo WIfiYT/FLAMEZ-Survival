@@ -1,0 +1,44 @@
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+const TILE = 32;
+let gameRunning = false;
+let keys = {};
+
+document.addEventListener('keydown', e=>keys[e.key]=true);
+document.addEventListener('keyup', e=>keys[e.key]=false);
+
+function openPlay(){
+    document.getElementById("menu").style.display="none";
+    document.getElementById("worldSelect").style.display="block";
+}
+
+function startGame(mode){
+    setDifficulty(mode);
+    document.getElementById("worldSelect").style.display="none";
+    gameRunning = true;
+    genWorld();
+    initInventoryUI();
+    loop();
+}
+
+function loop(){
+    if(!gameRunning) return;
+    updatePlayer();
+    updateEnemies();
+    updateProjectiles();
+    updateEnvironment();
+    updateInventoryUI();
+    updateBuildings();
+    draw();
+    requestAnimationFrame(loop);
+}
+
+function draw(){
+    drawEnvironment(ctx);
+    drawWorld(ctx);
+    drawPlayer(ctx);
+    drawEnemies(ctx);
+    drawProjectiles(ctx);
+    drawBuildings(ctx);
+    updateUI();
+}
