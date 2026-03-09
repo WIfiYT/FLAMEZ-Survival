@@ -1,0 +1,221 @@
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>8-Bit Forest Survival</title>
+<style>
+    /* ---------------- Body & Canvas ---------------- */
+    body { margin: 0; background: #000; font-family: monospace; }
+    canvas { display: block; margin: 0 auto; background: #4a7b4f; image-rendering: pixelated; }
+
+    /* ---------------- UI ---------------- */
+    #ui {
+        position: absolute; top: 10px; left: 10px;
+        color: white; font-size: 18px; text-shadow: 2px 2px 4px #000;
+    }
+
+    #inventoryUI {
+        position: absolute; bottom: 10px; left: 50%;
+        transform: translateX(-50%);
+        display: flex; gap: 4px;
+    }
+    .invSlot {
+        width: 36px; height: 36px; background: #222;
+        border: 2px solid white; image-rendering: pixelated;
+    }
+
+    /* ---------------- Menus ---------------- */
+    #menu {
+        position: absolute; width: 100%; height: 100%;
+        display: flex; justify-content: center; align-items: center;
+        background: rgba(0,0,0,0.9); color: white;
+        flex-direction: column;
+    }
+    .btn {
+        background: #222; padding: 15px 30px; margin: 10px;
+        border: 2px solid white; cursor: pointer; font-size: 22px;
+    }
+    .btn:hover { background: #444; }
+
+    #worldSelect {
+        display: none;
+        position: absolute; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.85);
+        color: white; text-align: center; padding-top: 100px;
+    }
+</style>
+</head>
+<body>
+
+<!-- ---------------- Menus ---------------- -->
+<div id="menu">
+    <div class="btn" onclick="openPlay()">Play</div>
+    <div class="btn" onclick="alert('Tutorial Coming Soon')">Tutorial</div>
+    <div class="btn" onclick="alert('Settings Coming Soon')">Settings</div>
+</div>
+
+<div id="worldSelect">
+    <h1>Create New World</h1>
+    <button class="btn" onclick="startGame('easy')">Easy</button>
+    <button class="btn" onclick="startGame('normal')">Normal</button>
+    <button class="btn" onclick="startGame('hard')">Hard</button>
+</div>
+
+<!-- ---------------- Canvas ---------------- -->
+<canvas id="game" width="800" height="600"></canvas>
+
+<!-- ---------------- UI ---------------- -->
+<div id="ui"></div>
+<div id="inventoryUI"></div>
+
+<script>
+/* ---------------- Global Variables ---------------- */
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+const TILE = 32;  // 32x32 pixel sprites
+let keys = {};
+let gameRunning = false;
+
+/* ---------------- Player ---------------- */
+let player = {
+    x: 400,
+    y: 300,
+    health: 100,
+    hunger: 100,
+    thirst: 100,
+    inventory: [],
+    hasRifle: false
+};
+
+/* ---------------- Difficulty Settings ---------------- */
+let difficulty = "normal";
+let hungerRate = 0.02;
+let thirstRate = 0.03;
+let damageRate = 7.5;
+
+/* ---------------- Game Objects ---------------- */
+let trees = [];
+let bushes = [];
+let animals = [];
+let buildings = [];
+let season = "summer";
+
+/* ---------------- Input Handling ---------------- */
+document.addEventListener('keydown', e => keys[e.key] = true);
+document.addEventListener('keyup', e => keys[e.key] = false);
+
+/* ---------------- Random Helpers ---------------- */
+function rand(min,max){ return Math.random()*(max-min)+min; }
+function chance(pct){ return Math.random()<pct/100; }
+function dist(x1,y1,x2,y2){ return Math.hypot(x1-x2,y1-y2); }
+
+/* ---------------- Menu Functions ---------------- */
+function openPlay(){
+    document.getElementById("menu").style.display = "none";
+    document.getElementById("worldSelect").style.display = "block";
+}
+
+function startGame(mode){
+    difficulty = mode;
+    if(mode==="easy"){ hungerRate=0.01; thirstRate=0.015; damageRate=5; }
+    if(mode==="normal"){ hungerRate=0.02; thirstRate=0.03; damageRate=7.5; }
+    if(mode==="hard"){ hungerRate=0.03; thirstRate=0.04; damageRate=10; }
+
+    document.getElementById("worldSelect").style.display="none";
+    gameRunning=true;
+    genWorld();
+    loop();
+}
+
+/* ---------------- Placeholder World Generation ---------------- */
+function genWorld(){
+    // Trees
+    for(let i=0;i<80;i++){
+        trees.push({ x:rand(0,800), y:rand(0,600), color:"green" });
+    }
+    // Bushes
+    for(let i=0;i<30;i++){
+        bushes.push({ x:rand(0,800), y:rand(0,600), berry:["red","purple","blue"][Math.floor(Math.random()*3)] });
+    }
+    // Animals
+    for(let i=0;i<10;i++){
+        animals.push({ x:rand(0,800), y:rand(0,600), type:chance(70)?"deer":"bear", hp:50, angry:false });
+    }
+    // Abandoned buildings
+    for(let i=0;i<3;i++){ if(chance(30)){ buildings.push({ x:rand(0,800), y:rand(0,600) }); } }
+}
+
+/* ---------------- Main Game Loop ---------------- */
+function loop(){
+    if(!gameRunning) return;
+    updatePlayer();
+    draw();
+    requestAnimationFrame(loop);
+}
+
+/* ---------------- Update Player ---------------- */
+function updatePlayer(){
+    // Movement
+    if(keys["w"]) player.y-=2;
+    if(keys["s"]) player.y+=2;
+    if(keys["a"]) player.x-=2;
+    if(keys["d"]) player.x+=2;
+
+    // Hunger & Thirst drain
+    player.hunger -= hungerRate;
+    player.thirst -= thirstRate;
+
+    if(player.hunger<=0||player.thirst<=0) player.health -=0.05;
+}
+
+/* ---------------- Draw Everything ---------------- */
+function draw(){
+    ctx.clearRect(0,0,800,600);
+
+    // Water
+    ctx.fillStyle="#3b7bd4";
+    ctx.fillRect(0,0,50,600);
+
+    // Fire (spawn)
+    ctx.fillStyle="orange";
+    ctx.fillRect(384,284,32,32);
+
+    // Trees
+    trees.forEach(t=>{
+        ctx.fillStyle=t.color;
+        ctx.fillRect(t.x,t.y,TILE,TILE);
+    });
+
+    // Bushes
+    bushes.forEach(b=>{
+        ctx.fillStyle="green";
+        ctx.fillRect(b.x,b.y,TILE,TILE);
+        ctx.fillStyle=b.berry;
+        ctx.fillRect(b.x+10,b.y+10,12,12);
+    });
+
+    // Buildings
+    buildings.forEach(b=>{
+        ctx.fillStyle="#555";
+        ctx.fillRect(b.x,b.y,64,64);
+    });
+
+    // Animals
+    animals.forEach(a=>{
+        ctx.fillStyle=a.type==="deer"?"#c2a35e":"#603020";
+        ctx.fillRect(a.x,a.y,TILE,TILE);
+    });
+
+    // Player
+    ctx.fillStyle="white";
+    ctx.fillRect(player.x,player.y,TILE,TILE);
+
+    // UI
+    document.getElementById("ui").innerHTML=
+        `Health: ${player.health.toFixed(1)}<br>
+         Hunger: ${player.hunger.toFixed(1)}<br>
+         Thirst: ${player.thirst.toFixed(1)}<br>
+         Inventory: ${player.inventory.join(", ")}`;
+}
+</script>
+</body>
+</html>
